@@ -1,8 +1,9 @@
+import os
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
 
-TOKEN = "8525612178:AAHon74pKlOfLYfu3meUmOKhlmES3-trIIY"
-CHANNEL_ID = "@achadosdokick"
+TOKEN = os.getenv("BOT_TOKEN")
+CHANNEL_ID = os.getenv("CHANNEL_ID")
 
 async def encaminhar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
@@ -11,22 +12,21 @@ async def encaminhar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     texto = update.message.text
 
     if "amazon." in texto or "amzn.to" in texto:
-        msg = f"""🔥 ACHADO NA AMAZON 🔥
+        mensagem = (
+            "🔥 ACHADO NA AMAZON 🔥\n\n"
+            "🛒 Produto recomendado\n"
+            f"👉 {texto}\n\n"
+            "⚡ Oferta por tempo limitado!"
+        )
 
-🛒 Produto recomendado
-👉 {texto}
-
-⚡ Oferta por tempo limitado!
-"""
-        await context.bot.send_message(chat_id=CHANNEL_ID, text=msg)
+        await context.bot.send_message(
+            chat_id=CHANNEL_ID,
+            text=mensagem
+        )
 
 def main():
     app = ApplicationBuilder().token(TOKEN).build()
-
-    app.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, encaminhar)
-    )
-
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, encaminhar))
     print("🤖 Bot iniciado com sucesso")
     app.run_polling()
 
