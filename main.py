@@ -2,9 +2,14 @@ import requests
 import hashlib
 import hmac
 import datetime
-import urllib.parse
 from telegram import Update
-from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    MessageHandler,
+    ContextTypes,
+    filters,
+)
 
 # ================== CONFIGURAÇÕES ==================
 BOT_TOKEN = "8525612178:AAHon74pKlOfLYfu3meUmOKhlmES3-trIIY"
@@ -37,22 +42,30 @@ def buscar_produto(asin):
             "Images.Primary.Large",
             "ItemInfo.Title",
             "Offers.Listings.Price",
-            "Offers.Listings.SavingBasis"
+            "Offers.Listings.SavingBasis",
         ],
         "PartnerTag": AMAZON_ASSOCIATE_TAG,
         "PartnerType": "Associates",
-        "Marketplace": "www.amazon.com.br"
+        "Marketplace": "www.amazon.com.br",
     }
 
     amz_date = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
     date_stamp = datetime.datetime.utcnow().strftime("%Y%m%d")
 
-    canonical_headers = f"content-encoding:amz-1.0\ncontent-type:application/json; charset=utf-8\nhost:{HOST}\nx-amz-date:{amz_date}\n"
-    signed_headers = "content-encoding;content-type;host;x-amz-date"
     payload_hash = hashlib.sha256(str(payload).encode("utf-8")).hexdigest()
 
+    canonical_headers = (
+        "content-encoding:amz-1.0\n"
+        "content-type:application/json; charset=utf-8\n"
+        f"host:{HOST}\n"
+        f"x-amz-date:{amz_date}\n"
+    )
+
+    signed_headers = "content-encoding;content-type;host;x-amz-date"
+
     canonical_request = (
-        "POST\n/paapi5/getitems\n\n"
+        "POST\n"
+        "/paapi5/getitems\n\n"
         f"{canonical_headers}\n"
         f"{signed_headers}\n"
         f"{payload_hash}"
@@ -60,41 +73,57 @@ def buscar_produto(asin):
 
     algorithm = "AWS4-HMAC-SHA256"
     credential_scope = f"{date_stamp}/{REGION}/{SERVICE}/aws4_request"
+
     string_to_sign = (
-        f"{algorithm}\n{amz_date}\n{credential_scope}\n"
+        f"{algorithm}\n"
+        f"{amz_date}\n"
+        f"{credential_scope}\n"
         f"{hashlib.sha256(canonical_request.encode('utf-8')).hexdigest()}"
     )
 
-    signing_key = get_signature_key(AMAZON_SECRET_KEY, date_stamp, REGION, SERVICE)
-    signature = hmac.new(signing_key, string_to_sign.encode("utf-8"), hashlib.sha256).hexdigest()
+    signing_key = get_signature_key(
+        AMAZON_SECRET_KEY, date_stamp, REGION, SERVICE
+    )
+
+    signature = hmac.new(
+        signing_key,
+        string_to_sign.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
 
     authorization_header = (
-        f"{algorithm} Credential={AMAZON_ACCESS_KEY}/{credential_scope}, "
-        f"SignedHeaders={signed_headers}, Signature={signature}"
+        f"{algorithm} "
+        f"Credential={AMAZON_ACCESS_KEY}/{credential_scope}, "
+        f"SignedHeaders={signed_headers}, "
+        f"Signature={signature}"
     )
 
     headers = {
         "Content-Type": "application/json; charset=utf-8",
         "Content-Encoding": "amz-1.0",
         "X-Amz-Date": amz_date,
-        "Authorization": authorization_header
+        "Authorization": authorization_header,
     }
 
-    r = requests.post(ENDPOINT, json=payload, headers=headers)
+    r = requests.post(ENDPOINT, json=payload, headers=headers, timeout=20)
     return r.json()
 
 # ================== BOT ==================
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("🤖 Bot online! Envie um link da Amazon.")
+
 async def receber_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
     texto = update.message.text.strip()
 
-    if "amzn.to" not in texto and "amazon" not in texto:
-        await update.message.reply_text("❌ Envie apenas link da Amazon")
+    if "amazon" not in texto and "amzn.to" not in texto:
+        await update.message.reply_text("❌ Envie apenas links da Amazon.")
         return
 
     asin = texto.split("/")[-1].split("?")[0]
-    dados = buscar_produto(asin)
 
     try:
+        dados = buscar_produto(asin)
+
         item = dados["ItemsResult"]["Items"][0]
         titulo = item["ItemInfo"]["Title"]["DisplayValue"]
         preco_atual = item["Offers"]["Listings"][0]["Price"]["Amount"]
@@ -117,22 +146,25 @@ async def receber_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=CHANNEL_ID,
             photo=imagem,
             caption=mensagem,
-            parse_mode="Markdown"
+            parse_mode="Markdown",
         )
 
         await update.message.reply_text("✅ Oferta postada com sucesso!")
 
-    except Exception as e:
-        await update.message.reply_text("❌ Não consegui puxar os dados do produto.")
+    except Exception:
+        await update.message.reply_text(
+            "❌ Não foi possível obter os dados do produto."
+        )
 
 def main():
-    app = ApplicationBuilder().token("8525612178:AAHon74pKlOfLYfu3meUmOKhlmES3-trIIY").build()
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    app.add_handler(CommandHandler("start"))
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, receber_link)
+    )
 
     app.run_polling()
-
-
 
 if __name__ == "__main__":
     main()
