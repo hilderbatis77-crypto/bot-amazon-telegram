@@ -128,7 +128,7 @@ async def receber_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, receber_link))
-    app.run_polling(close_loop=false)
+    app.run_polling(close_loop=False)
 
 
 if __name__ == "__main__":
