@@ -1,29 +1,40 @@
 import asyncio
-import os
-from telegram import Bot
+from telegram import Update, Bot
+from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
 
 BOT_TOKEN = "8525612178:AAHon74pKlOfLYfu3meUmOKhlmES3-trIIY"
 CHANNEL_ID = "@achadosdokick"
 
-# Arquivo de trava para evitar mensagens duplicadas
-LOCK_FILE = "/tmp/telegram_bot_lock.txt"
+async def receber_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    texto = update.message.text
 
-async def main():
-    # Se já enviou mensagem, não envia de novo
-    if not os.path.exists(LOCK_FILE):
-        bot = Bot(token=BOT_TOKEN)
-        await bot.send_message(
-            chat_id=CHANNEL_ID,
-            text="✅ BOT ONLINE E ESTÁVEL\n\nMensagem enviada com sucesso pelo Railway 🚀"
+    if "amazon." in texto or "amzn.to" in texto:
+        mensagem = (
+            "🔥 OFERTA IMPERDÍVEL 🔥\n\n"
+            "👉 Aproveite essa oferta na Amazon:\n"
+            f"{texto}\n\n"
+            "⚡ Corre que pode acabar a qualquer momento!\n\n"
+            "#Amazon #Achados #Promoção"
         )
 
-        # Cria o lock
-        with open(LOCK_FILE, "w") as f:
-            f.write("sent")
+        await context.bot.send_message(
+            chat_id=CHANNEL_ID,
+            text=mensagem,
+            disable_web_page_preview=False
+        )
 
-    # Mantém o processo vivo (Railway não crasha)
-    while True:
-        await asyncio.sleep(3600)
+        await update.message.reply_text("✅ Link enviado para o canal com sucesso!")
+    else:
+        await update.message.reply_text("❌ Envie apenas links da Amazon.")
+
+async def main():
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    app.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, receber_link)
+    )
+
+    await app.run_polling()
 
 if __name__ == "__main__":
     asyncio.run(main())
