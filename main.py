@@ -1,17 +1,22 @@
-import asyncio
-from telegram import Bot
-import time
+from telegram import Update
+from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
 
-BOT_TOKEN = "8525612178:AAHon74pKlOfLYfu3meUmOKhlmES3-trIIY"
-CHANNEL_ID = "@achadosdokick"
+TOKEN = "SEU_TOKEN_DO_BOT"
+CHANNEL_ID = "@seucanal"
 
-bot = Bot(token=BOT_TOKEN)
+async def encaminhar(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    texto = update.message.text
 
-async def main():
-    await bot.send_message(
-        chat_id=CHANNEL_ID,
-        text="🚀 TESTE OK!\n\nMensagem enviada pelo Railway com sucesso."
-    )
+    if "amazon." in texto or "amzn.to" in texto:
+        msg = f"""🔥 ACHADO NA AMAZON 🔥
 
-if __name__ == "__main__":
-    asyncio.run(main())
+🛒 Produto recomendado
+👉 {texto}
+
+⚡ Oferta por tempo limitado!
+"""
+        await context.bot.send_message(chat_id=CHANNEL_ID, text=msg)
+
+app = ApplicationBuilder().token(TOKEN).build()
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, encaminhar))
+app.run_polling()
