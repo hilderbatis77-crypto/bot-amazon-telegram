@@ -12,7 +12,7 @@ from telegram.ext import (
 )
 
 # ================== CONFIGURAÇÕES ==================
-BOT_TOKEN = "8525612178:AAHon74pKlOfLYfu3meUmOKhlmES3-trIIY"
+BOT_TOKEN = "8525612178:AAFaZe_Qj75LDSfZbHSwe9U8v0LSASLjP7M"
 CHANNEL_ID = "@achadosdokick"
 
 AMAZON_ACCESS_KEY = "AKPAJ1OA781767773612"
