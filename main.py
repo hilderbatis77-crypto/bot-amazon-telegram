@@ -128,7 +128,7 @@ async def receber_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     app = ApplicationBuilder().token("8525612178:AAHon74pKlOfLYfu3meUmOKhlmES3-trIIY").build()
 
-    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("start"))
 
     app.run_polling()
 
