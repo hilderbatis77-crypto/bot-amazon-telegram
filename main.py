@@ -11,5 +11,5 @@ async def main():
         text="🚀 TESTE OK!\n\nMensagem enviada corretamente com async."
     )
 
-if_name_== "-main_":
+if _name_=="-main_":
 asyncio.run(main())
