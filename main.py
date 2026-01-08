@@ -6,7 +6,7 @@ CHANNEL_ID = "@achadosdokick"
 
 bot = Bot(token=BOT_TOKEN)
 
-bot.send_message(
+await bot.send_message(
     chat_id=CHANNEL_ID,
     text="🚀 TESTE OK!\n\nMensagem enviada pelo Railway com sucesso."
 )
