@@ -6,9 +6,11 @@ CHANNEL_ID = "@achadosdokick"
 
 bot = Bot(token=BOT_TOKEN)
 
-await bot.send_message(
-    chat_id=CHANNEL_ID,
-    text="🚀 TESTE OK!\n\nMensagem enviada pelo Railway com sucesso."
-)
+async def main():
+    await bot.send_message(
+        chat_id=CHANNEL_ID,
+        text="🚀 TESTE OK!\n\nMensagem enviada pelo Railway com sucesso."
+    )
 
-time.sleep(10)
+if __name__ == "__main__":
+    asyncio.run(main())
